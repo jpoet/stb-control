@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=64", "setuptools_scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stb-control"
+dynamic = ["version"]
+description = "stb (roku and android) control"
+requires-python = ">=3.8"
+dependencies = [
+    "adb-shell",
+    "roku"
+]
+authors = [{name = "John Patrick Poet", email = "jpoet@mythtv.org"}]
+license = "MIT"
+readme = "README.md"
+classifiers = [
+    "Programming Language :: Python :: 3"
+]
+
+[project.scripts]
+stb-control = "stb_control.stb_control:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["stb_control*"]
+
+[tool.setuptools_scm]
+# Presence of this section enables setuptools_scm.  It will use the
+# latest git tag and append the commit hash if the repo is 'dirty' or
+# has commits since the last tag.
