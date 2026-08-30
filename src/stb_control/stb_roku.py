@@ -126,7 +126,7 @@ class RokuSTB(STB):
     def Reboot(self, val = None, args = None):
         log.info('Rebooting roku')
         return self.Keys("home up right up right up 2 right down right select",
-                         dealy=0.5)
+                         delay=0.5)
 
     def Wait(self, val : float, args = None):
         self.sleep(val)
