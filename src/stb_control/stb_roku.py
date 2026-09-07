@@ -131,28 +131,23 @@ class RokuSTB(STB):
     def Wait(self, val : float, args = None):
         self.sleep(val)
 
-    def MediaState(self, val = None, args = None):
+    def MediaState(self, val=None, args=None):
         for idx in range(3):
             try:
                 raw_xml = self.device._get("/query/media-player")
                 break
             except Exception as e:
-                log.warn(f"Failed to retrieve playing status: {e}")
+                log.warning(f"Failed to retrieve playing status: {e}")
                 self.sleep(1)
         else:
             return "UNKNOWN"
 
-        """
         try:
-            chan_xml = self.device._get("/query/tv-active-channel")
-            root = ET.fromstring(chan_xml)
-            msg = ET.tostring(root, encoding="utf-8").decode("utf-8")
-            log.info(f"Channel: {msg}")
+            root = ET.fromstring(raw_xml)
         except Exception as e:
-            log.warn(f"Failed to retrieve channel info: {e}")
-        """
+            log.warning(f"Failed to parse media-player status: {e}")
+            return "UNKNOWN"
 
-        root = ET.fromstring(raw_xml)
         msg = ET.tostring(root, encoding="utf-8").decode("utf-8")
         log.debug(f"\n{msg}")
 
@@ -160,33 +155,49 @@ class RokuSTB(STB):
 
         pos_node = root.find("position")
         dur_node = root.find("duration")
+        live_node = root.find("is_live")
 
-        if pos_node is not None:
+        if pos_node is not None and pos_node.text:
             position_ms = int(pos_node.text.split()[0])
         else:
             position_ms = 0
-        if dur_node is not None:
+
+        if dur_node is not None and dur_node.text:
             duration_ms = int(dur_node.text.split()[0])
         else:
             duration_ms = 0
 
-        # 3 minutes is 180,000 ms, 4 minutes is 240,000
-        if raw_state.casefold() == "play":
-            if 0 < duration_ms < 240000:
-                state = "IDLE"
-            else:
+        # Roku explicitly identifies live streams with <is_live ...>true</is_live>.
+        # For live streams, duration is the current DASH media window and cannot
+        # be used to determine whether playback is actually active.
+        is_live = (
+            live_node is not None and
+            live_node.get("blocked", "").casefold() != "true" and
+            live_node.text is not None and
+            live_node.text.strip().casefold() == "true"
+        )
+
+        if raw_state is None:
+            state = "IDLE"
+        elif raw_state.casefold() == "play":
+            if is_live or duration_ms >= 240000:
                 state = "PLAYING"
-        elif raw_state.casefold().startswith("pause"):
-            if 0 < duration_ms < 240000:
-                state = "IDLE"
             else:
+                state = "IDLE"
+        elif raw_state.casefold().startswith("pause"):
+            if is_live or duration_ms >= 240000:
                 state = "PAUSED"
-        elif raw_state.casefold() in ["close", "stop", None]:
+            else:
+                state = "IDLE"
+        elif raw_state.casefold() in ("close", "stop"):
             state = "IDLE"
         else:
             state = "UNKNOWN"
 
-        log.info(f"Roku Status:{state} Position:{position_ms}ms Duration:{duration_ms}ms")
+        log.info(f"Roku Status:{state} "
+                 f"Position:{position_ms}ms "
+                 f"Duration:{duration_ms}ms "
+                 f"Live:{is_live}")
 
         return state
 
@@ -198,17 +209,17 @@ class RokuSTB(STB):
     def amazon_epilogue(self):
         # First line may trigger "skip". Third line goes back to the beginning.
         return ('up 3 wait 0.25 down 2 wait 0.25 left wait 0.25 select wait 2 '
-                'right 4 select wait 5 play '
+                'right 4 select wait 5 play wait 4 '
                 'up 3 wait 0.25 down 2 wait 0.25 left wait 0.25 select play wait 0.5')
 
 
     @register_handler('prologue', 'disney')
     def disney_prologue(self):
-        return ' wait 15 '
+        return ' wait 5 '
 
     @register_handler('epilogue', 'disney')
     def disney_epilogue(self):
-        return 'down 2 wait 1 left wait 1 select wait 0.75'
+        return 'down 2 wait 0.25 left wait 0.25 select wait 0.75'
 
     def Prologue(self, service, args = None):
         prologue = self.prologue_handlers.get(service)
