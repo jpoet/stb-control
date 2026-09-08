@@ -160,6 +160,7 @@ class RokuSTB(STB):
 
         pos_node = root.find("position")
         dur_node = root.find("duration")
+        live_node = root.find("is_live")
 
         if pos_node is not None:
             position_ms = int(pos_node.text.split()[0])
@@ -170,8 +171,20 @@ class RokuSTB(STB):
         else:
             duration_ms = 0
 
+        # Roku explicitly identifies live streams with <is_live ...>true</is_live>.
+        # For live streams, duration is the current DASH media window and cannot
+        # be used to determine whether playback is actually active.
+        is_live = (
+            live_node is not None and
+            live_node.get("blocked", "").casefold() != "true" and
+            live_node.text is not None and
+            live_node.text.strip().casefold() == "true"
+        )
+
         # 3 minutes is 180,000 ms, 4 minutes is 240,000
-        if raw_state.casefold() == "play":
+        if is_live:
+            state = "PLAYING"
+        elif raw_state.casefold() == "play":
             if 0 < duration_ms < 240000:
                 state = "IDLE"
             else:
