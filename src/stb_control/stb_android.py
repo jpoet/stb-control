@@ -523,7 +523,7 @@ class AndroidSTB(STB):
                 ...
         return True
 
-    def Reset(self):
+    def Reset(self, val = None, args = None):
         apps_to_kill = set()
 
         # Targeted Focus Check (Bypasses messy window stacks)
