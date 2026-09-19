@@ -276,8 +276,11 @@ def execute():
 
             if action_func:
                 # Call it and pass the required arguments
-                if not action_func(val, args=args):
-                    return False
+                try:
+                    if not action_func(val, args=args):
+                        return False
+                except Exception as e:
+                    log.error(f"Failed to start {val}: {e}")
 
     return True
 

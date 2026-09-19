@@ -555,7 +555,8 @@ class AndroidSTB(STB):
             "android",
             "com.google.android.tvlauncher",
             "com.google.android.apps.tv.launcherx",
-            "com.android.systemui"
+            "com.android.systemui",
+            "com.amazon.tv.launcher"
         }
         apps_to_kill = apps_to_kill - system_packages
 

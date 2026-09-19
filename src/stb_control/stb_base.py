@@ -58,7 +58,7 @@ class STB:
     def sleep(self, dur : float, loglevel = 'INFO'):
         time.sleep(dur)
 
-    def Wait(self, value : float):
+    def Wait(self, value : float, args = None):
         time.sleep(value)
 
     def needs_update(self, filename: str, max_age_hours: float = 12.0) -> bool:
