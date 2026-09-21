@@ -261,14 +261,12 @@ class RokuSTB(STB):
 
         return None
 
-    @register_handler('link', 'victory')
-    def victory_link(self, link, content_type):
+    @register_handler('link', 'null')
+    def null_link(self, link, content_type):
         show_id = link
-        search = show_id.split('/')[-1] if '/' in show_id else show_id
-        nav = f'left 3 up 3 select wait 3 string "{search}" '
-        nav += f'wait 3 right 4 wait 1 select wait 2 select wait 3'
         link_type = 'live'
-        return {'app'  : "Victory+",
+        nav = ''
+        return {'app'  : None,
                 'type' : link_type,
                 'id'   : show_id,
                 'keys' : nav}
@@ -276,6 +274,8 @@ class RokuSTB(STB):
     @register_handler('link', 'nwsl')
     @register_handler('link', 'www.nwslsoccer.com')
     def nwsl_link(self, link, content_type):
+        self.Home()
+
         # https://www.nwslsoccer.com/match/98c13cd2f1554ce0ba2aca6de0766735/north-carolina-courage-vs-seattle-reign
         show_id = link
         search = show_id.split('/')[-1] if '/' in show_id else show_id
@@ -285,10 +285,16 @@ class RokuSTB(STB):
         nav += ' left wait 1 down 4 up 1 select wait 2 select wait 2 '
         # Search for match
         nav += f' string "{search}" wait 2 down 4 select '
-        # Limit results to Live
-        nav += ' wait 2 down right select wait 2 right select wait 2 select wait 2 back wait 2 back '
+
+        if content_type == "vod":
+            # Limit results to VOD
+            nav += ' wait 2 down right select wait 2 right select wait 2 down select wait 2 back wait 2 back '
+        else:
+            # Limit results to Live
+            nav += ' wait 2 down right select wait 2 right select wait 2 select wait 2 back wait 2 back '
+
         # Now select first (hopefully correct) episode
-        nav += ' wait 2 down wait 2 select '
+#        nav += ' wait 2 down wait 2 select '
 
         link_type = 'live'
         return {'app'  : "NWSL+",
@@ -298,6 +304,8 @@ class RokuSTB(STB):
 
     @register_handler('link', 'www.espn.com')
     def espn_link(self, link, content_type):
+        self.Home()
+
         #https://www.espn.com/watch/player/_/id/d672495a-7ff0-4410-a4f3-a7946db3296f#bucketId=5
         show_id = self.parse_link_id('id', link)
         content_type if len(content_type) > 0 else 'live'
@@ -310,6 +318,8 @@ class RokuSTB(STB):
     @register_handler('link', 'youtubetv')
     @register_handler('link', 'tv.youtube.com')
     def tv_youtube_link(self, link, content_type):
+        self.Home()
+
         # watch/Kln08tZecgI
         show_id = self.parse_link_id('watch', link)
         if show_id is None:
@@ -325,6 +335,8 @@ class RokuSTB(STB):
 
     @register_handler('link', 'www.disneyplus.com')
     def disney_link(self, link, content_type):
+        self.Home()
+
         # play/14cbe24d-a931-46d6-b805-ac9893167a88
         show_id = self.parse_link_id('play', link)
         if show_id is None:
@@ -343,6 +355,8 @@ class RokuSTB(STB):
 
     @register_handler('link', 'www.paramountplus.com')
     def paramount_link(self, link, content_type):
+        self.Home()
+
         # shows/video/024nWQfVtByAvsmL1X4cFvAFXYmZC2kr/
         show_id = self.parse_link_id('video', link)
         if show_id is None:
@@ -360,6 +374,8 @@ class RokuSTB(STB):
     @register_handler('link', 'roku')
     @register_handler('link', 'therokuchannel.roku.com')
     def roku_link(self, link, content_type):
+        self.Home()
+
         # https://therokuchannel.roku.com/details/b74ef35a5e5c9dbb33cfe901a1f5efeb/nwsl-orlando-pride-vs-houston-dash
         show_id = self.parse_link_id('details', link)
         if show_id is None:
@@ -376,6 +392,8 @@ class RokuSTB(STB):
     @register_handler('link', 'aiv')
     @register_handler('link', 'www.amazon.com')
     def amazon_link(self, link, content_type):
+        self.Home()
+
         # gp/video/detail/B0GNSXWBWG/ref=atv_hm_spo_c_7n71ba_eWFbka_1_1?jic=16%7CCgNhbGwSA2FsbA%3D%3D
         show_id = self.parse_link_id('detail', link)
         if show_id is None:
@@ -421,22 +439,24 @@ class RokuSTB(STB):
         if params is None:
             return None
 
-        self.Home()
-
         tv = self.device[params['app']]
         try:
-            log.info(f"Launching {params['app']} for {params['type']} "
-                     f": {params['id']}")
-            self.device.launch(tv, {"contentId": params['id'],
-                                    "mediaType": params['type']})
+            if params['app']:
+                log.info(f"Launching {params['app']} for {params['type']} "
+                         f": {params['id']}")
+                self.device.launch(tv, {"contentId": params['id'],
+                                        "mediaType": params['type']})
 
-            self.sleep(10)
-            for slp in range(10):
-                if self.device.active_app.name == params['app']:
-                    log.info(f"{self.device.active_app.name} running")
-                    return params['keys']
-                log.info(f"Current {self.device.active_app.name}")
-                time.sleep(1)
+                self.sleep(10)
+                for slp in range(10):
+                    if self.device.active_app.name == params['app']:
+                        log.info(f"{self.device.active_app.name} running")
+                        return params['keys']
+                    log.info(f"Current {self.device.active_app.name}")
+                    time.sleep(1)
+            else:
+                log.info(f"{self.device.active_app.name} running")
+                return params['keys']
         except Exception as e:
             log.exception(f"Deep link failed : {e}")
             self.device.launch(tv, {"contentId": params['id'],
