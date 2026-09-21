@@ -93,7 +93,7 @@ class RokuSTB(STB):
 
                         if cmd == 'home':
                             getattr(self.device, 'left')()
-                            self.sleep(delay)
+                            self.sleep(delay + 0.25)
 
                     except Exception as e:
                         log.error(f"Failed to process key '{cmd}' : {e}")
@@ -211,7 +211,7 @@ class RokuSTB(STB):
     def amazon_epilogue(self):
         # First line may trigger "skip". Third line goes back to the beginning.
         return ('up 3 wait 0.25 down 2 wait 0.25 left wait 0.25 select wait 2 '
-                'right 4 select wait 5 play '
+                'right 4 select wait 10 play '
                 'up 3 wait 0.25 down 2 wait 0.25 left wait 0.25 select play wait 0.5')
 
 
