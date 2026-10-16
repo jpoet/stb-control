@@ -143,9 +143,13 @@ def process_command_line():
                         metavar="<callsign>",
                         help='MythTV callsign to tune to')
 
-    parser.add_argument('--description', type=str,
-                        metavar="<show description>",
+    parser.add_argument('--description', type=str, required=False,
+                        nargs='?', const="", default="",
                         help='Description of show')
+
+    parser.add_argument('--subtitle', type=str, required=False,
+                        nargs='?', const="", default="",
+                        help='Subtitle of show')
 
     parser.add_argument('--seriesid', type=str,
                         metavar="<seriesid>")
