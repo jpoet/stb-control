@@ -298,7 +298,9 @@ class RokuSTB(STB):
             nav += ' wait 2 down right select wait 2 right select wait 2 down select wait 2 back wait 2 back '
         else:
             # Limit results to Live
-            nav += ' wait 2 down right select wait 2 right select wait 2 select wait 2 back wait 2 back '
+            nav += ' wait 2 down right select wait 2 right select wait 2 select wait 2 '
+            # Now select event
+            nav += 'back 2 wait 2 back '
 
         # Now select first (hopefully correct) episode
 #        nav += ' wait 2 down wait 2 select '
