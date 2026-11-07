@@ -213,6 +213,15 @@ class RokuSTB(STB):
         return ('up 3 wait 0.25 back wait 0.5 down wait 0.25 left wait 0.25 select wait 10 '
                 'up 3 wait 0.25 back wait 0.5 down wait 0.25 left wait 0.25 select play wait 0.5')
 
+    @register_handler('prologue', 'paramount')
+    def paramount_prologue(self):
+        return ' wait 10 '
+
+    @register_handler('epilogue', 'paramount')
+    def paramount_epilogue(self):
+        # First line may trigger "skip". Second line goes back to the beginning.
+        return ('up 2 select wait 0.75')
+
     @register_handler('prologue', 'disney')
     def disney_prologue(self):
         return ' wait 15 '
@@ -351,24 +360,6 @@ class RokuSTB(STB):
                 'keys'  : nav_keys}
 
 
-    @register_handler('link', 'www.paramountplus.com')
-    def paramount_link(self, link, content_type):
-        self.Home()
-
-        # shows/video/024nWQfVtByAvsmL1X4cFvAFXYmZC2kr/
-        show_id = self.parse_link_id('video', link)
-        if show_id is None:
-            log.error(f"No ID found: {link}")
-            return None
-
-        link_type = content_type if len(content_type) > 0 else 'episode'
-        nav_keys = "wait 10 select wait 5"
-        return {'app'   : "Paramount Plus",
-                'type'  : link_type,
-                'id'    : show_id,
-                'keys'  : nav_keys}
-
-
     @register_handler('link', 'roku')
     @register_handler('link', 'therokuchannel.roku.com')
     def roku_link(self, link, content_type):
@@ -385,6 +376,30 @@ class RokuSTB(STB):
                 'type'  : link_type,
                 'id'    : show_id,
                 'keys'  : nav_keys}
+
+
+    @register_handler('link', 'pplus')
+    @register_handler('link', 'www.paramountplus.com')
+    def paramount_link(self, link, content_type):
+        self.Home()
+
+        # https://www.paramountplus.com/movies/video/wriVHu1p2XHh0cBlSJZaf7Ua_6Vu9rFp/
+        # https://www.paramountplus.com/live-tv/stream/national-womens-soccer-league/c2da9e55-b6e9-4f16-ad8f-bd5e61e01b16/
+        if 'national-womens-soccer-league' in link:
+            show_id = self.parse_link_id('national-womens-soccer-league', link)
+            link_type = 'liveFeed'
+            nav_keys = 'wait 10 down'
+        else:
+            show_id = self.parse_link_id('video', link)
+            if show_id is None:
+                show_id = self.parse_link_id(None, link)
+            link_type = content_type if len(content_type) > 0 else 'episode'
+            nav_keys = 'wait 10'
+
+        return {'app'  : "Paramount Plus",
+                'type' : link_type,
+                'id'   : show_id,
+                'keys' : nav_keys}
 
 
     @register_handler('link', 'aiv')
