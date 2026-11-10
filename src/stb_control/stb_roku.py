@@ -209,9 +209,8 @@ class RokuSTB(STB):
 
     @register_handler('epilogue', 'amazon')
     def amazon_epilogue(self):
-        # First line may trigger "skip". Second line goes back to the beginning.
-        return ('up 3 wait 0.25 back wait 0.5 down wait 0.25 left wait 0.25 select wait 10 '
-                'up 3 wait 0.25 back wait 0.5 down wait 0.25 left wait 0.25 select play wait 0.5')
+        # Even if the down/left results in a skip (something), it immediatly changes to a go to beginning.
+        return ('select play play wait 2 down wait 0.25 left select wait 0.25 select wait 0.25 play wait 0.5')
 
     @register_handler('prologue', 'paramount')
     def paramount_prologue(self):
